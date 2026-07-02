@@ -36,8 +36,8 @@ Public signals (fixed by the circuit): `[nullifierHash, root, aspRoot, recipient
 
 | Component | Contract ID |
 |---|---|
-| Verifier (Groth16 / BN254) | `CBA5VK6GAB5CQX6KCS3YFNAYJ3MH5SH6KIW4JGSVOGJPCY6KNLW4EMQJ` |
-| Pool | `CD7DJEQMKHODMBJQ2DPHBAMEPN7UHOHT27FN6IEREC3WN7KSDFJBWUXR` |
+| Verifier (Groth16 / BN254) | `CAVZB37I2YHUINDZDQJ6OGDWHL43IN3GLT7SB3HX6KOUNIBQ4BC3R7AO` |
+| Pool | `CDNHJZUGZL7RHVMXFLOENWXQQOYIB2NGLGXN5AQP5OCES57XWWBN7VU6` |
 
 (Latest IDs are always in [`deployments/`](deployments/). Re-run `scripts/e2e.sh` to deploy your own.)
 
