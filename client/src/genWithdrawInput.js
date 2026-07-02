@@ -10,6 +10,7 @@ import { createNote, commitmentOf, nullifierHashOf, labelOf } from "./note.js";
 import { MerkleTree } from "./merkle.js";
 import { toDec, randomField } from "./field.js";
 import { genViewKeypair, encryptNote, blobToHex } from "./viewkey.js";
+import { recipientField } from "./address.js";
 
 const LEVELS = 20;
 
@@ -52,8 +53,12 @@ export async function buildWithdrawInput({ recipient = 12345n, approved = true }
 }
 
 async function main() {
-  const recipient = process.argv[2] ? BigInt(process.argv[2]) : 12345n;
+  // recipient is a Stellar strkey; the bound field is derived exactly as the
+  // pool derives it on-chain (SHA-256(strkey) truncated to a field element).
+  const recipientStrkey =
+    process.argv[2] || "GDEMORECIPIENTPLACEHOLDERADDRESSXXXXXXXXXXXXXXXXXXXXXXXX";
   const approved = process.argv[3] !== "denied";
+  const recipient = recipientField(recipientStrkey);
   const { input, commitment, nullifierHash, root, label, aspRoot } =
     await buildWithdrawInput({ recipient, approved });
 
@@ -71,7 +76,7 @@ async function main() {
     nonce: toDec(fullInput.nonce),
     nullifier: toDec(fullInput.nullifier),
     secret: toDec(fullInput.secret),
-    recipient: toDec(recipient),
+    recipient: recipientStrkey,
     commitment: toDec(commitment),
   };
   const { blob, disclosureKey } = encryptNote(notePlain, auditor.vpk);
@@ -83,6 +88,7 @@ async function main() {
     root: toDec(root),
     aspRoot: toDec(aspRoot),
     recipient: toDec(recipient),
+    recipientStrkey,
     amount: toDec(input.amount),
     scope: toDec(input.scope),
     approved,
