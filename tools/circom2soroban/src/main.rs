@@ -1,8 +1,12 @@
-use ark_bls12_381::{Fq, Fq2, G1Affine, G2Affine};
-use ark_serialize::CanonicalSerialize;
 use num_bigint::BigUint;
 use serde::Deserialize;
-use std::{fs, str::FromStr};
+use std::fs;
+
+// Stellar's BN254 host expects (bn254.rs docs):
+//   G1: be_bytes(X) || be_bytes(Y)                 (32 + 32)
+//   G2: Fp2 encoded as be_bytes(c1) || be_bytes(c0);
+//       point = be(x.c1) || be(x.c0) || be(y.c1) || be(y.c0)   (imaginary first, EIP-197)
+// snarkjs emits Fp2 coordinates as [c0, c1] in decimal strings.
 
 #[derive(Deserialize)]
 struct VerificationKeyJson {
@@ -25,30 +29,27 @@ struct ProofJson {
 
 type PublicSignalsJson = Vec<String>;
 
+// 32-byte big-endian encoding of a decimal field-element string.
+fn fp_be(s: &str) -> [u8; 32] {
+    parse_u256_be(s)
+}
+
+// G1 point: be(X) || be(Y).
 fn g1_bytes(x: &str, y: &str) -> Vec<u8> {
-    let p = G1Affine::new(
-        Fq::from_str(x).expect("invalid G1 x"),
-        Fq::from_str(y).expect("invalid G1 y"),
-    );
-    let mut out = Vec::new();
-    p.serialize_uncompressed(&mut out)
-        .expect("failed to serialize G1");
+    let mut out = Vec::with_capacity(64);
+    out.extend(fp_be(x));
+    out.extend(fp_be(y));
     out
 }
 
-fn g2_bytes(x1: &str, x2: &str, y1: &str, y2: &str) -> Vec<u8> {
-    let x = Fq2::new(
-        Fq::from_str(x1).expect("invalid G2 x1"),
-        Fq::from_str(x2).expect("invalid G2 x2"),
-    );
-    let y = Fq2::new(
-        Fq::from_str(y1).expect("invalid G2 y1"),
-        Fq::from_str(y2).expect("invalid G2 y2"),
-    );
-    let p = G2Affine::new(x, y);
-    let mut out = Vec::new();
-    p.serialize_uncompressed(&mut out)
-        .expect("failed to serialize G2");
+// G2 point from snarkjs Fp2 pairs x = (x_c0, x_c1), y = (y_c0, y_c1).
+// Host wants imaginary part first: be(x_c1)||be(x_c0)||be(y_c1)||be(y_c0).
+fn g2_bytes(x_c0: &str, x_c1: &str, y_c0: &str, y_c1: &str) -> Vec<u8> {
+    let mut out = Vec::with_capacity(128);
+    out.extend(fp_be(x_c1));
+    out.extend(fp_be(x_c0));
+    out.extend(fp_be(y_c1));
+    out.extend(fp_be(y_c0));
     out
 }
 

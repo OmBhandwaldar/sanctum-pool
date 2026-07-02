@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
-# Converts snarkjs Groth16 JSON (BLS12-381) into the byte layout the Soroban
+# Converts snarkjs Groth16 JSON (BN254) into the byte layout the Soroban
 # verifier expects. Adapted from CircomStellar (MIT). See NOTICE.
 
 [[bin]]
@@ -12,8 +12,6 @@ name = "circom2soroban"
 path = "src/main.rs"
 
 [dependencies]
-ark-bls12-381 = "0.4.0"
-ark-serialize = "0.4.2"
 hex = "0.4.3"
 num-bigint = "0.4.6"
 serde = { version = "1.0.228", features = ["derive"] }
