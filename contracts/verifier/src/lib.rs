@@ -1,8 +1,17 @@
 #![no_std]
 
+// Groth16 verifier over BN254, using Stellar's native BN254 host functions
+// (Protocol 25/26). Verification logic adapted from CircomStellar (MIT), with
+// the curve switched BLS12-381 -> BN254 so it composes with circomlib Poseidon
+// and the native BN254 Poseidon host function. See NOTICE.
+
 use soroban_sdk::{
     contract, contracterror, contractimpl,
-    crypto::bls12_381::{Fr, G1Affine, G2Affine, G1_SERIALIZED_SIZE, G2_SERIALIZED_SIZE},
+    crypto::bn254::{
+        Bn254G1Affine as G1Affine, Bn254G2Affine as G2Affine, Fr,
+        BN254_G1_SERIALIZED_SIZE as G1_SERIALIZED_SIZE,
+        BN254_G2_SERIALIZED_SIZE as G2_SERIALIZED_SIZE,
+    },
     symbol_short, vec, Bytes, Env, Symbol, Vec, U256,
 };
 
@@ -159,19 +168,19 @@ fn verify_proof(
         return Err(VerifierError::MalformedVerifyingKey);
     }
 
-    let bls = env.crypto().bls12_381();
+    let bn = env.crypto().bn254();
 
     let mut vk_x = vk.ic.get(0).unwrap();
     for (s, v) in pub_signals.iter().zip(vk.ic.iter().skip(1)) {
-        let prod = bls.g1_mul(&v, &s);
-        vk_x = bls.g1_add(&vk_x, &prod);
+        let prod = bn.g1_mul(&v, &s);
+        vk_x = bn.g1_add(&vk_x, &prod);
     }
 
     let neg_a = -proof.a;
     let vp1 = vec![env, neg_a, vk.alpha, vk_x, proof.c];
     let vp2 = vec![env, proof.b, vk.beta, vk.gamma, vk.delta];
 
-    Ok(bls.pairing_check(vp1, vp2))
+    Ok(bn.pairing_check(vp1, vp2))
 }
 
 #[contract]
