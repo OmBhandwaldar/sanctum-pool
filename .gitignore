@@ -37,3 +37,5 @@ stellar-keys/
 
 # ASP curator runtime state
 asp-service/approved.json
+
+web/dist/
