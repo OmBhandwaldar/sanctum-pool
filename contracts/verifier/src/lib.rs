@@ -12,10 +12,11 @@ use soroban_sdk::{
         BN254_G1_SERIALIZED_SIZE as G1_SERIALIZED_SIZE,
         BN254_G2_SERIALIZED_SIZE as G2_SERIALIZED_SIZE,
     },
-    symbol_short, vec, Bytes, Env, Symbol, Vec, U256,
+    symbol_short, vec, Address, Bytes, Env, Symbol, Vec, U256,
 };
 
 const VK_KEY: Symbol = symbol_short!("VK");
+const ADMIN_KEY: Symbol = symbol_short!("ADMIN");
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -25,6 +26,8 @@ pub enum VerifierError {
     VerificationKeyNotSet = 2,
     MalformedProof = 3,
     MalformedPublicSignals = 4,
+    AlreadyInitialized = 5,
+    NotInitialized = 6,
 }
 
 #[derive(Clone)]
@@ -188,7 +191,25 @@ pub struct Groth16VerifierContract;
 
 #[contractimpl]
 impl Groth16VerifierContract {
+    /// One-time init: set the admin who is allowed to install the verifying key.
+    pub fn init(env: Env, admin: Address) -> Result<(), VerifierError> {
+        if env.storage().instance().has(&ADMIN_KEY) {
+            return Err(VerifierError::AlreadyInitialized);
+        }
+        env.storage().instance().set(&ADMIN_KEY, &admin);
+        Ok(())
+    }
+
+    /// Install the verifying key. Admin-only — an attacker who could swap the VK
+    /// could make the verifier accept forged proofs and drain any dependent pool.
     pub fn set_vk(env: Env, vk_bytes: Bytes) -> Result<(), VerifierError> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&ADMIN_KEY)
+            .ok_or(VerifierError::NotInitialized)?;
+        admin.require_auth();
+
         // Parse once here so malformed keys fail fast and cannot be stored.
         let _vk = VerificationKey::from_bytes(&env, &vk_bytes)?;
         env.storage().instance().set(&VK_KEY, &vk_bytes);
