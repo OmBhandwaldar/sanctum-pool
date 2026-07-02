@@ -1,0 +1,16 @@
+Sanctum Pool
+============
+
+This project builds on the following open-source work:
+
+- CircomStellar (https://github.com/jamesbachini/CircomStellar), MIT License.
+  The Groth16-over-BLS12-381 Soroban verifier contract
+  (contracts/verifier) and the snarkjs->Soroban byte conversion tool
+  (tools/circom2soroban) are adapted from CircomStellar. Original
+  copyright retained under the MIT License.
+
+Design inspiration and reference (not code):
+- Privacy Pools whitepaper (Buterin, Illum, Nadler, Schaer, Soleimani).
+- 0xbow privacy-pools-core (association-set / ASP architecture).
+- Nethermind stellar-private-payments (Stellar privacy-pool prototype).
+- Railgun / Zcash Sapling (view-key selective-disclosure pattern).

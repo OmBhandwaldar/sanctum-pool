@@ -1,0 +1,11 @@
+{
+  "name": "sanctum-pool",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Compliant privacy pool on Stellar — circuit build + client tooling",
+  "license": "MIT",
+  "devDependencies": {
+    "snarkjs": "^0.7.5",
+    "circomlib": "^2.0.5"
+  }
+}

@@ -5,6 +5,15 @@
 
 ---
 
+## ⚑ DECISION LOG
+
+**M0 outcome (empirical) — curve switched from BN254 → BLS12-381.** M0 confirmed the *proven, working* Circom→Soroban Groth16 reference (Bachini `CircomStellar`, MIT) is **BLS12-381**, not BN254 as earlier research wrongly claimed. Reproduced it end-to-end: a Groth16 proof verified `true` on testnet (contract `CCYJ4222TMPIKF2JDKYENJAJPYHACQN5QHYKQAK6RZ6QFSNLYKGYJDBW`). BN254 host functions exist (P25/P26) but have **no working end-to-end Circom→Soroban reference** to lean on within our time budget.
+- **Decision:** verifier + proving = **Groth16 over BLS12-381** (reuse the proven verifier + arkworks conversion tool). Still native on-chain ZK verification via `env.crypto().bls12_381().pairing_check`.
+- **New-primitive story preserved via Poseidon (P25/CAP-0075):** on-chain Merkle tree uses the *native Poseidon* host function — a genuinely new P25 primitive — over the BLS12-381 field. circomlib Poseidon constants are all `< BN254 r < BLS12-381 r`, so they're valid field elements under `-p bls12381` (no reduction) → circuit and host can match.
+- BN254 port noted as straightforward future work in README.
+
+---
+
 ## Context — why we're building this
 
 The hackathon's entire thesis: Stellar's **Protocol 25 "X-Ray"** and **Protocol 26 "Yardstick"** added native **BN254** curve host functions and **Poseidon** hashing so that on-chain ZK proof verification is finally cheap. Organizers explicitly call **compliant privacy pools with ASP allow/deny lists** "the compliant-privacy sweet spot for real-world adoption," and selective disclosure via **view keys** is "the pattern Stellar's privacy strategy is built around." This project sits at the exact intersection of what wins here: **real-world money movement + compliance + the new primitives doing load-bearing work.**

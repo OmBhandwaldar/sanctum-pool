@@ -1,0 +1,16 @@
+[package]
+name = "sanctum-verifier"
+version = "0.1.0"
+edition = "2021"
+publish = false
+rust-version = "1.89.0"
+
+# Groth16-over-BLS12-381 verifier. Foundation adapted from CircomStellar
+# (github.com/jamesbachini/CircomStellar, MIT). See NOTICE.
+
+[lib]
+crate-type = ["cdylib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = { version = "25.1.0" }
