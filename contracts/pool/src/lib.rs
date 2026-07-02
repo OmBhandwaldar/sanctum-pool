@@ -43,6 +43,7 @@ enum DataKey {
     Roots,
     AspRoots,
     Nullifier(U256),
+    EncNote(U256),
 }
 
 #[contracttype]
@@ -112,8 +113,15 @@ impl SanctumPool {
         Ok(())
     }
 
-    /// Deposit one denomination and record `commitment`. Returns the leaf index.
-    pub fn deposit(env: Env, from: Address, commitment: U256) -> Result<u32, PoolError> {
+    /// Deposit one denomination and record `commitment`. `enc_note` is the
+    /// view-key-encrypted note blob, anchored on-chain for selective disclosure.
+    /// Returns the leaf index.
+    pub fn deposit(
+        env: Env,
+        from: Address,
+        commitment: U256,
+        enc_note: Bytes,
+    ) -> Result<u32, PoolError> {
         from.require_auth();
         let cfg = get_config(&env)?;
 
@@ -130,10 +138,21 @@ impl SanctumPool {
         env.storage()
             .instance()
             .set(&DataKey::Commitments, &commitments);
+        env.storage()
+            .persistent()
+            .set(&DataKey::EncNote(commitment.clone()), &enc_note);
 
         env.events()
             .publish((symbol_short!("deposit"), index), commitment);
         Ok(index)
+    }
+
+    /// Fetch the view-key-encrypted note anchored for a commitment (for auditors).
+    pub fn get_enc_note(env: Env, commitment: U256) -> Bytes {
+        env.storage()
+            .persistent()
+            .get(&DataKey::EncNote(commitment))
+            .unwrap_or(Bytes::new(&env))
     }
 
     /// Admin posts a state-tree root derived from the committed leaves.
