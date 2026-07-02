@@ -323,14 +323,18 @@ function wireAuditor() {
       const onchain = $("a-cm").value.trim();
       const res = await verifyDisclosure(plain);
       const matches = String(plain.commitment) === onchain;
+      const amountXlm = (Number(plain.amount) / 1e7).toLocaleString(undefined, { maximumFractionDigits: 7 });
+      const recipientRow = plain.recipient
+        ? `<div class="kv"><span class="muted">recipient</span><span class="val trunc" style="max-width:280px">${plain.recipient}</span></div>`
+        : "";
       out.innerHTML = `
         <div class="result">
-          <div class="kv"><span class="muted">amount</span><span class="val">${plain.amount}</span></div>
-          <div class="kv"><span class="muted">recipient</span><span class="val">${plain.recipient}</span></div>
+          <div class="kv"><span class="muted">amount</span><span class="val">${amountXlm} XLM</span></div>
+          ${recipientRow}
           <div class="kv"><span class="muted">commitment</span><span class="val trunc" style="max-width:280px">${plain.commitment}</span></div>
           <div class="check"><span class="ic ${res.ok ? "ok-fg" : "bad-fg"}">${res.ok ? icons.check : icons.x}</span> commitment recomputed from plaintext matches</div>
           <div class="check"><span class="ic ${matches ? "ok-fg" : "bad-fg"}">${matches ? icons.check : icons.x}</span> disclosed commitment equals the on-chain commitment</div>
-          <div class="verdict ${res.ok && matches ? "ok" : "bad"}">${res.ok && matches ? `AUDIT OK - deposit of ${plain.amount} to ${plain.recipient}` : "Disclosure did not verify"}</div>
+          <div class="verdict ${res.ok && matches ? "ok" : "bad"}">${res.ok && matches ? `AUDIT OK - verified deposit of ${amountXlm} XLM` : "Disclosure did not verify"}</div>
         </div>`;
     } catch (e) {
       out.innerHTML = `<div class="verdict bad">Decryption failed - wrong key or corrupted note</div>`;
