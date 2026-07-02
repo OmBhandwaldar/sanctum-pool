@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "contracts/verifier",
+  "contracts/pool",
   "tools/circom2soroban",
 ]
 resolver = "2"
