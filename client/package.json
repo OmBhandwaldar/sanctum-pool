@@ -6,6 +6,9 @@
   "description": "Sanctum Pool client: note generation, Merkle tree, witness input, proving",
   "license": "MIT",
   "dependencies": {
+    "@noble/ciphers": "^2.2.0",
+    "@noble/curves": "^2.2.0",
+    "@noble/hashes": "^2.2.0",
     "circomlibjs": "^0.1.7"
   }
 }
