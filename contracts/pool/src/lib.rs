@@ -92,6 +92,9 @@ impl SanctumPool {
         if env.storage().instance().has(&DataKey::Config) {
             return Err(PoolError::AlreadyInitialized);
         }
+        // Bind initialization to the declared admin so a front-runner cannot
+        // seize control of a freshly-deployed pool.
+        admin.require_auth();
         let cfg = Config {
             verifier,
             token,
@@ -224,17 +227,30 @@ impl SanctumPool {
             .unwrap_or(Vec::new(&env))
     }
 
+    /// Deterministic field element bound to a recipient address:
+    /// the first 31 bytes (big-endian) of SHA-256(strkey). The client uses the
+    /// identical derivation as the circuit's `recipient` input, so the proof is
+    /// bound to this exact payout address — a front-runner who swaps the payout
+    /// address produces a different field and the proof no longer verifies.
+    pub fn recipient_field(env: Env, recipient: Address) -> U256 {
+        let digest = env.crypto().sha256(&recipient.to_string().to_bytes());
+        let arr = digest.to_array();
+        let mut b = [0u8; 32];
+        b[1..32].copy_from_slice(&arr[0..31]); // top byte 0 => value < 2^248 < field
+        U256::from_be_bytes(&env, &Bytes::from_array(&env, &b))
+    }
+
     /// Withdraw one denomination to `recipient` by spending a note.
     ///
     /// Public signals (order fixed by the circuit):
     ///   [nullifier_hash, root, asp_root, recipient_field, amount, scope]
+    /// `recipient_field` is derived on-chain from `recipient` (not caller-supplied).
     pub fn withdraw(
         env: Env,
         proof_bytes: Bytes,
         nullifier_hash: U256,
         root: U256,
         asp_root: U256,
-        recipient_field: U256,
         recipient: Address,
     ) -> Result<(), PoolError> {
         let cfg = get_config(&env)?;
@@ -255,6 +271,9 @@ impl SanctumPool {
         {
             return Err(PoolError::NullifierAlreadySpent);
         }
+
+        // recipient bound on-chain: derive the field the proof must commit to
+        let recipient_field = Self::recipient_field(env.clone(), recipient.clone());
 
         // reconstruct public signals and verify the Groth16 proof
         let signals = [
