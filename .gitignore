@@ -1,0 +1,32 @@
+# Rust / Soroban
+target/
+**/*.rs.bk
+*.wasm
+
+# Node
+node_modules/
+dist/
+.env
+.env.*
+
+# Circom / snarkjs build artifacts (large / regenerable)
+*.ptau
+*.zkey
+*.wtns
+*.r1cs
+*.sym
+**/*_js/
+build/
+circuits/build/
+
+# Keys & secrets — NEVER commit
+*.pem
+secrets/
+.soroban/
+stellar-keys/
+*.secret
+
+# OS / editor
+.DS_Store
+.idea/
+*.swp

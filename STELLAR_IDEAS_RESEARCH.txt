@@ -1,0 +1,355 @@
+RESEARCH: REAL-WORLD PROBLEMS + WINNING ZK HACKATHON PROJECTS (for Stellar Hacks: Real-World ZK)
+Compiled 2026-07-02. Deadline: 2026/07/03 22:30.
+
+Meta-finding: Stellar's Protocol 25 "X-Ray" and Protocol 26 "Yardstick" added native BN254 curve ops
+and Poseidon/Poseidon2 hashing host functions specifically to make on-chain ZK verification cheap.
+Judges will likely reward projects that specifically exploit these native host functions (fast Poseidon
+Merkle trees, cheap BN254/Groth16 pairing checks) over generic ZK demos that ignore them.
+Caveat: at time of the earlier "Stellar Hacks: ZK Gaming" event, Noir support on Soroban was described
+as still limited by decentralized-computing constraints — verify current Noir/UltraHonk verifier maturity
+before committing to a Noir-heavy "wild" scope; keep Circom or RISC Zero as fallback.
+
+================================================================================
+PART A — REAL-WORLD PROBLEMS ZK CAN SOLVE (sourced framing, not hackathon projects)
+================================================================================
+
+1. CROSS-BORDER REMITTANCE COMPLIANCE
+   Problem: compliance ops are ~10-15% of international banks' operational cost; correspondent banking
+   is slow, costly, opaque. Proposed fix in literature: blockchain + self-sovereign identity + ZKPs so
+   smart contracts embed zk-KYC, sanctions screening, and reporting directly into payment rails without
+   exposing customer data.
+   Sources: jisem-journal.com / lorojournals.com "Zero-Knowledge Enabled Cross-Border Payment Systems";
+   tookitaki.com on remittance/correspondent-banking money-laundering risk.
+   Stellar fit (WILD): Noir circuit proving sender/receiver pass jurisdiction + sanctions-list checks
+   (nullifier-based), verified via a Soroban Groth16/UltraHonk verifier before releasing a Stellar
+   payment; pair with an off-chain ASP-style allowlist.
+
+2. PAYROLL / INVOICING PRIVACY
+   Problem: companies must prove tax/labor-law compliance without exposing individual salaries.
+   Source: OneSafe, "Current Trends in Crypto Payroll Solutions."
+   Stellar fit (MILD-MEDIUM): Circom/Noir circuit proving "sum of payouts == treasury withdrawal" AND
+   "each payout >= minimum wage" via range proof, hiding individual amounts; Soroban verifier gates the
+   batch payment contract.
+
+3. SUPPLY CHAIN PROVENANCE WITH CONFIDENTIALITY
+   Problem: need to validate authenticity/certifications without revealing proprietary supplier data.
+   Real implementation: Everledger (diamonds/wine/art provenance).
+   Sources: cryptoslate.com "Beyond Privacy: Zero-knowledge applications in supply chain transparency";
+   IBM Research, "Enabling Privacy and Traceability in Supply Chains using Blockchain and ZKPs."
+   Stellar fit (WILD): multi-hop Merkle-based provenance chain, each handoff proven in Noir, final proof
+   aggregated/verified in Soroban to gate RWA-token issuance.
+
+4. GIG WORKER CREDENTIAL / REPUTATION VERIFICATION
+   Problem: platforms prioritize onboarding speed over rigor (exploitable identity gaps); GDPR/CCPA
+   raise the bar for storing credential data. ZKPs let workers prove license/background-check status
+   without revealing underlying documents.
+   Sources: AuthBridge, Didit, gcheck (industry trend pieces); academic paper "A ZK-Proof-Enabled
+   Blockchain-Based Academic Record Verification System" (PMC).
+   Stellar fit (MILD): Noir circuit proving "credential issued by trusted issuer + not expired" via a
+   Merkle tree of issuer signatures, verified on Soroban before granting a gig-marketplace access badge
+   (nullifier prevents reuse/Sybil).
+
+5. CONFIDENTIAL LENDING / DEFI PRIVACY
+   Problem (Cointelegraph: "Confidential lending will unlock trillions for DeFi markets"): transparent
+   on-chain positions let others front-run/copy strategies and expose institutions' risk books.
+   Stellar fit (WILD): private collateralization-ratio proof (range proof) gating a Soroban lending pool
+   draw; oracle price feed committed via hash; RISC Zero proves off-chain solvency computation.
+
+================================================================================
+PART B — REAL HACKATHON-WINNING / NOTABLE PROJECTS (mined for adaptation to Stellar)
+================================================================================
+
+--- IDENTITY / AGE / KYC ---
+
+1. Identifi — ETHGlobal Taipei, won World Pool Prize + Celo L2 Pool Prize.
+   What: Self Protocol ZK attestations (age/nationality/socials) + Worldcoin biometrics; server verifies
+   proofs without seeing raw personal data.
+   Why it won: solves "prove personhood/age without doxxing" cleanly using existing SDKs.
+   Stellar port (MILD): Noir circuit verifying a Self-Protocol-style passport/NFC attestation signature,
+   outputs boolean "over 18" claim consumed by a Soroban gate.
+   Source: https://ethglobal.com/showcase/identifi-hbpyp
+
+2. Brick Towers — Midnight "ZK Identity" hackathon winner.
+   What: ZK proof of legal drinking age for alcohol e-commerce, no birthdate/ID exposure.
+   Why it won: concrete regulated-commerce use case.
+   Stellar port (MILD, near 1:1 with Stellar's own "age/eligibility" idea): Circom circuit comparing
+   birthdate-hash range vs. current date; Soroban verifier unlocks a purchase contract.
+   Source: https://midnight.network/blog/zk-identity-hackathon-teams-showcase-decentralized-identity
+
+3. Edda Labs — same Midnight hackathon. Compliance-gated real estate auction; modular contracts prove
+   AML/jurisdiction compliance before allowing auction participation.
+   Stellar port (WILD): combine sealed-bid auction (#19) + jurisdiction Merkle-allowlist proof.
+
+4. Fairway — same hackathon. Government-ID-bound soulbound token via Midnight.
+   Stellar port (MEDIUM): Noir circuit verifies a signed government-ID hash, issues a nullifier-bound
+   non-transferable Soroban token — prevents duplicate identities. Direct analog to Stellar's own
+   "privacy-preserving on-chain identity / Sybil resistance via nullifiers" idea.
+
+5. Midnames — same hackathon, honorable mention. NFC passport chip scan -> ZK proof of passport
+   validity/expiry; three-part architecture (local server, mobile app, dApp).
+   Stellar port (WILD, multi-part): mobile NFC read + Noir proof generation + Soroban verifier —
+   ambitious for a weekend, good "wild" pick.
+
+6. zkCV — ETHGlobal Circuit Breaker (2024). Anonymous CV/job application eliminating hiring bias —
+   proves qualifications without revealing name/age/gender.
+   Stellar port (MILD): Circom Merkle-membership proof ("holds a degree/certification from an
+   accredited issuer"), verified on Soroban, outputs only pass/fail.
+
+7. ZKPassport — originated hackathon/PSE-adjacent, acquired by Aztec Labs (2025) to power privacy-first
+   identity on Ethereum. Real government-ID-attested proofs from ePassport NFC chips via ZK. One of the
+   most "real" (now production, VC/Aztec-backed) examples in this space.
+   Stellar port (WILD full; MILD if reusing their SDK output): full passport-to-Soroban integration is
+   ambitious — a mild version just builds the Soroban verifier + a consuming dApp using ZKPassport's
+   existing proof output (e.g., "prove nationality != sanctioned list" for an RWA issuer).
+   Sources: https://zkpassport.id/, https://crypto.news/aztec-labs-acquires-zkpassport-code-stays-open/
+
+8. Anon Aadhaar — PSE/Ethereum Foundation project, widely reused as a hackathon building block (e.g.
+   "Anon Checkin" at ETHIndia). ZK proof of Indian national-ID ownership revealing only chosen
+   attributes. Real-world relevance: India's 1.4B-person Aadhaar system.
+   Stellar port (MEDIUM): port the Circom circuit logic (RSA signature verification over Aadhaar QR
+   data) to prove residency/age, verify via Soroban.
+   Sources: https://github.com/anon-aadhaar/anon-aadhaar, https://pse.dev/projects/anon-aadhaar
+
+9. BlockCircle — zk-based KYC/creditworthiness using Reclaim Protocol (zkTLS) over off-chain data (UPI,
+   banking, salary slips) with zero data disclosure; targets underbanked Sybil-resistant onboarding.
+   Stellar port (WILD): zkTLS proof of a bank API response (e.g. balance >= X) verified via a RISC Zero
+   guest program, Groth16-wrapped and checked in Soroban — a strong "proof-of-funds" implementation.
+   Source: https://www.hackquest.io/projects/BlockCircle
+
+10. zkCreditScore (zkMe) — anonymous bridging of US FICO credit scores on-chain using zkTLS + Reclaim
+    Protocol; a real product, not just a demo.
+    Stellar port (MEDIUM): mild version proves "FICO score fetched via zkTLS >= threshold" using a fixed
+    range-proof circuit, consumed by a Soroban lending contract for undercollateralized loans.
+    Sources: https://medium.com/@zkMe/zkme-launches-zkcreditscore-anonymous-bridging-of-credit-scores-onchain-2b15778fc481,
+    https://zkscore.credit/
+
+11. DAO Opener — DIF Hackathon winner. Proves NFT-gated DAO membership without holding the NFT's
+    private key on the verifying device, using Polygon ID.
+    Stellar port (MILD, near 1:1 with Stellar's own "private allowlist" idea): Merkle-membership circuit
+    proving "wallet holds one of N allowlisted NFTs/tokens" without revealing which one.
+
+--- PRIVATE PAYMENTS / SHIELDED TRANSFERS / CONFIDENTIAL TOKENS ---
+
+12. Roman Kyoto — ETHGlobal Sydney 2024 finalist, won dabl.club "Launch an MVP on Polygon Cardona"
+    (1st place). Multi-asset shielded pool (MASP) for ERC-20s using Circom circuits + UTXO note model
+    with encrypted notes in a Merkle tree (Tornado-Nova-like but multi-asset). Deployed to Base Sepolia +
+    Polygon Cardona for cheap proving.
+    Why compelling: solves "shielded pool for many tokens, not just one" — a real gap vs. Tornado Cash.
+    Stellar port (WILD — strong flagship candidate): Circom UTXO note circuit (nullifier + commitment
+    scheme), Merkle tree of commitments maintained by a Soroban contract, Groth16 verifier checks spend
+    proofs. Maps directly onto Stellar's own "UTXO-style private payment systems" and "shielded
+    stablecoin wallet" ideas.
+    Source: https://ethglobal.com/showcase/roman-kyoto-s3uio
+
+13. shadefi / Darkpool / Mystic DEX / CryptoHold'em — ETHGlobal London 2024, FHE-based (Fhenix) private
+    DeFi/orderbook/poker projects. Not Groth16/Circom, but shows demand for "hidden balances, public
+    addresses" DEX orderbooks.
+    Stellar note: no FHE on Stellar — ZK equivalent is a private order-matching circuit (Noir) proving a
+    batch auction clears without revealing individual order sizes ("confidential DEX with private
+    positions").
+
+14. Privacy GHO Token — LFGHO 2024 (Aave hackathon). Encrypted balance transfers for the GHO stablecoin.
+    Direct precedent for "fully shielded stablecoin wallets."
+    Stellar port (MEDIUM): shielded-balance wrapper around a Stellar stablecoin/SEP-41 token using a
+    Roman-Kyoto-style UTXO circuit, single-asset for a mild weekend scope.
+
+15. ZKP2P (zkp2p) — conceived at ZK Hack Lisbon 2023 (2nd place); now a live, funded protocol (PSE
+    grants). Trustless P2P fiat on/offramp using zkTLS: user proves they made an off-chain Venmo/bank
+    payment without revealing full transaction details; escrow releases crypto automatically.
+    Why compelling: solves actual on/offramp friction — one of the strongest "real-world ZK" stories.
+    Stellar port (WILD, flagship candidate): RISC Zero guest program verifies a TLS transcript of a
+    payment-provider API response (Wise, PayPal), Groth16-wraps the receipt, Soroban escrow releases
+    XLM/stablecoin. Combines zkTLS + RISC Zero + Soroban escrow.
+    Sources: https://www.dlnews.com/research/internal/zkp2p-core-contributor-on-trustless-fiat-ramps-and-the-power-of-zk-tls/,
+    https://github.com/zkp2p
+
+16. Confido — EthCC Brussels 2024. Wage-payment confidentiality via functional encryption. Direct
+    precedent for "confidential payroll."
+    Stellar port (MILD): simpler ZK version — range-proof circuit proving each payout meets minimum-
+    wage/contract terms without revealing exact amount, batch-verified in Soroban.
+
+17. Cloak Coin, toadnado, Shadow Pay — various 2024 hackathon L1/L2 mixers and P2P confidential-transfer
+    apps (per web3privacy list). Reinforce demand for simple shielded-transfer weekend projects.
+    Stellar port (MILD — best "safe first ZK project" pick): single-asset Tornado-style Noir circuit
+    (commitment/nullifier, fixed denominations) with a Soroban Merkle-tree + verifier contract.
+
+--- COMPLIANCE-AWARE PRIVACY / PRIVACY POOLS ---
+
+18. Privacy Pools (0xbow) — not a hackathon project; the production reference architecture for
+    "compliant privacy pools with ASP allow/deny lists," live on Ethereum mainnet (Vitalik Buterin among
+    first users). Directly matches Stellar's own idea-list item.
+    How it works: users deposit into a shielded pool; withdrawal requires a ZK proof that the deposit is
+    a member of an "association set" (ASP-curated allowlist) via Merkle inclusion, proving legitimacy
+    without revealing which deposit is whose.
+    Stellar port (WILD, probably the single best flagship pick — matches 2 of Stellar's own listed ideas
+    and has a live reference to study): port the ASP Merkle-membership + nullifier circuit to
+    Circom/Noir, verify through Soroban; ASP maintained off-chain by a compliance oracle updating an
+    on-chain Merkle root.
+    Sources: https://privacypools.com/, https://docs.privacypools.com/,
+    https://github.com/0xbow-io/privacy-pools-core
+
+--- SEALED-BID AUCTIONS / VOTING ---
+
+19. Blind Spot Auction — ETHGlobal showcase project. First-price sealed-bid auction for NFT art; ZK
+    hides bids until reveal, preventing price gouging/manipulation.
+    Stellar port (MILD): Noir circuit commits to a bid hash at bid-time, later proves bid >= threshold or
+    matches the commitment at reveal-time; Soroban contract manages commit/reveal phases + settlement.
+    Source: https://ethglobal.com/showcase/blind-spot-auction-zeffz
+
+20. FHE Vickrey Auction — Scaling Ethereum 2024 (FHE-based, not ZK-SNARK, but same auction-privacy
+    pattern; Vickrey = second-price sealed bid). Useful design reference despite different primitive.
+
+21. PolyVOTE — MACI-based private voting platform (MPC + ZK), deploys MACI on Linea, whitelabel UI for
+    election creation. Direct precedent for "private DAO governance/voting."
+    Stellar port (WILD if full MACI; MILD/MEDIUM simplified): full MACI port is nontrivial — a simpler
+    version drops the anti-collusion coordinator and does Semaphore-style anonymous-vote-with-nullifier
+    in Noir, verified on Soroban — still meets "private voting" without MACI's full complexity.
+
+22. zkdao — Devpost project. Attach any DAO to a ZKDAO contract for fully anonymous proposal voting.
+    Similar pattern to Semaphore.
+
+23. NEVO — ETHDam 2024. Privacy-enhanced voting combining the MACI protocol. Reinforces MACI as the
+    reference architecture judges reward for DAO governance privacy.
+
+24. zkVoting / zkDemocracy / zkvote — multiple independent hackathon PoCs, Semaphore + Polygon ID combos
+    for anonymous voting; simplest reference implementations for a mild-scope Stellar port.
+    Sources: https://github.com/TheBojda/zkdemocracy, https://github.com/flyingnobita/zkvote
+
+--- VERIFIABLE OFF-CHAIN COMPUTATION (credit scores, game results, ML) ---
+
+25. z0Wallet — Scaling Ethereum 2024 (ETHGlobal). Privacy-focused multisig wallet powered by the RISC
+    Zero (risc0) stack. Directly relevant as a RISC Zero + Soroban pattern reference.
+    Stellar port (MEDIUM): RISC Zero guest program validates multisig approval logic off-chain,
+    Groth16-wraps proof, Soroban verifier contract executes the approved transaction.
+
+26. zkora — ETHGlobal, RISC Zero-based. Developers write Solidity + JS that runs inside a zkVM; the JS
+    execution result + proof of correct execution get verified on-chain to validate off-chain
+    computation. Essentially a template for "verifiable off-chain computation" — arguably the cleanest
+    RISC Zero pattern to copy.
+    Stellar port (MEDIUM-WILD): swap Solidity target for a Soroban contract call; RISC Zero zkVM executes
+    an arbitrary off-chain scoring/ML-inference function, journal output + Groth16 proof verified by
+    Soroban before the contract accepts the result.
+    Source: https://web.ethglobal.com/showcase/zkora-r3dej
+
+27. ZkProof Portal — RISC Zero zkVM proof verifying correctness of an off-chain order-matching process
+    (DEX-adjacent verifiable computation).
+    Source: https://ethglobal.com/showcase/zkproof-portal-1jjg5
+
+28. Anti-Sandwich — RISC Zero project verifying canonical transaction ordering in a multicall execution,
+    proving MEV-resistant ordering happened off-chain. Good "verifiable computation for fairness"
+    pattern.
+    Source: https://ethglobal.com/showcase/anti-sandwich-q9gmv
+
+29. ZTF — used RISC Zero's STARK-based zkVM plus Bonsai to convert STARK->SNARK for cheap on-chain
+    verification — exactly the RISC Zero -> Groth16 -> Soroban pattern this hackathon calls for. Directly
+    relevant technical precedent.
+
+30. zk-credit-score-eth-global-bangkok (GitHub repo, multiple similar hackathon PoCs) — proves a
+    borrower meets a credit-score threshold without revealing the score, via ECC/range-proof circuits.
+    Direct precedent for Stellar's "verifiable off-chain computation: credit scores" idea.
+    Source: https://github.com/ritiklakhwani/zk-credit-score-eth-global-bangkok
+
+--- DEFI PRIVACY / LENDING ---
+
+31. Eclipse — winner of the $100K Aleo Hackathon (Paris). Private lending platform; lending circuits in
+    Leo (Aleo's ZK-native language), custom oracle generates off-chain proofs that collateral is
+    sufficient without revealing amounts.
+    Why it won (likely judge reasoning): solved a real DeFi transparency problem (front-running/
+    copy-trading of visible positions) with a working custom oracle, not just a toy circuit.
+    Stellar port (WILD): Noir circuit proving collateralization ratio >= threshold via range proof on
+    hidden collateral/debt values; oracle price commitment verified via hash; Soroban lending pool gates
+    borrow/liquidation using the verifier.
+    Source: https://medium.com/@alexandregrondin7/eclipse-redefining-defi-lending-with-privacy-on-aleo-ab77ada0997d
+
+32. Ghost Finance — private lending/borrowing protocol matching lenders/borrowers privately, hiding
+    negotiated rates. Reinforces "confidential DeFi" as a repeatable winning idea across hackathons.
+
+--- REPUTATION / ANONYMOUS FEEDBACK ---
+
+33. priv.cast — one of four winners at ETHGlobal Circuit Breaker per Scroll's announcement (alongside
+    Shadow Warfare, Unknown Finance, Urban Odyssey). Likely an anonymous broadcasting/attestation tool.
+    Flagged as not fully independently confirmed on mechanics — verify via ETHGlobal showcase before
+    citing details.
+    Source: https://x.com/Scroll_ZKP/status/1760567476583268389
+
+34. MegaAsk — EthCC Brussels 2024. Anonymous survey platform enabling on-chain questioning without
+    revealing respondent identity. Direct precedent for "anonymous feedback/attestation systems."
+    Stellar port (MILD): Semaphore-style nullifier circuit (Noir) ensures one response per unique
+    identity commitment without linking identity to response content; Soroban stores aggregated results.
+
+35. zkWhistleBlower — EthCC Brussels 2024. Evidence verification for corruption cases using TLS Notary
+    (zkTLS) — proves a document/webpage's authenticity without revealing the whistleblower's identity.
+    Strong real-world compliance/civic-tech narrative.
+    Stellar port (WILD): RISC Zero verifies a TLS transcript proving a document originated from a
+    specific server; Soroban contract anchors the proof hash for tamper-evident evidence logging.
+
+36. AnonFund — ETHGlobal Circuit Breaker. Regulatory-friendly anonymous crypto donations — donor proves
+    eligibility/compliance (e.g. not on a sanctions list) without revealing identity, while the platform
+    stays audit-ready. Close match to "compliant private transfers with view-key/selective disclosure."
+    Stellar port (MEDIUM): Noir circuit proves sender not in a sanctions Merkle-tree + donation amount
+    within legal limits; Soroban view-key mechanism lets an authorized auditor decrypt transaction
+    details later.
+
+--- PROOF-OF-RESERVES ---
+
+37. Zero-Knowledge Proof Hackathon (BSV, Nov-Dec 2022) — top 3 winners (BLS12-381 Library, ZkBaguette, ZK
+    Minesweeper) split $45K; broader theme areas included proof-of-reserves. No single named
+    "proof-of-reserves" winner surfaced, but confirms it as an established, judge-rewarded ZK hackathon
+    category. Academic precedent: Xiang Fu, "Instant Zero Knowledge Proof of Reserve" (2023).
+    Stellar port (MILD-MEDIUM): Merkle-sum-tree circuit (Circom) where an issuer proves total
+    liabilities <= on-chain reserve balance without revealing individual account balances — classic
+    exchange/stablecoin proof-of-reserves pattern, well-suited to a Stellar RWA/stablecoin issuer.
+
+--- CROSS-CHAIN / RECURSIVE PROOFS ---
+
+38. zkBridge — academic/production reference (not hackathon-specific, but powers a dedicated "zkBridge
+    track" at Berkeley RDI's zkp-web3-hackathon). Trustless cross-chain bridging using recursive SNARKs
+    to prove source-chain state transitions to a destination chain.
+    Why it's relevant to THIS hackathon specifically: directly matches Stellar's own "cross-chain
+    private bridges using BN254 compatibility" idea, and Stellar's Protocol 25/26 upgrades added native
+    BN254 curve ops + Poseidon hashing host functions specifically to make this cheap.
+    Stellar port (WILD, flagship): prove an Ethereum light-client state transition or event-inclusion
+    proof using a Circom/Noir circuit over BN254, verify on Soroban using the new native host functions —
+    arguably the most "on-brand" wild project given Stellar's own protocol investment.
+    Sources: https://arxiv.org/abs/2210.00264, https://docs.zkbridge.com/,
+    https://rdi.berkeley.edu/zkp-web3-hackathon/tracks/zk_bridge_track/
+
+39. SnarkPack / SnarkFold / HEKATON — research references (not hackathons). Practical Groth16
+    proof-aggregation schemes (SnarkPack aggregates 8192 proofs in 8.7s, verifies in 163ms). Useful
+    technical grounding for a "proof aggregation" wild project: batch many small Groth16 proofs (e.g.
+    many users' age-verification proofs) into one aggregate proof, cutting Soroban verification gas
+    costs.
+    Sources: https://eprint.iacr.org/2021/529.pdf, https://eprint.iacr.org/2023/1946.pdf
+
+--- GAMES (bonus — useful for a safe "mild" fallback) ---
+
+40. ZKnoid — ETHGlobal Istanbul. On-chain gaming reducing costs via ZK proofs (Mina-based). Precedent for
+    verifiable game-result proofs ("verifiable off-chain computation: game results").
+    Note: Stellar's own prior "Stellar Hacks: ZK Gaming" event (DoraHacks) already ships official Noir
+    examples — Sudoku ZK proof via UltraHonk, Maze ZK verifier proving valid moves. Worth directly
+    reusing/extending these official templates as a safe "mild" fallback scope if time runs out.
+    Source: https://dorahacks.io/hackathon/stellar-hacks-zk-gaming/resources
+
+================================================================================
+SHORTLIST — MILD vs WILD PICKS FOR THIS HACKATHON
+================================================================================
+
+MILD (weekend, single circuit, low execution risk):
+  - Age/eligibility verification (Brick Towers pattern) — Circom/Noir + Soroban boolean gate
+  - Merkle-membership private allowlist (DAO Opener pattern)
+  - Commit-reveal sealed-bid auction (Blind Spot Auction pattern)
+  - Single-asset shielded transfer (Cloak Coin / Roman-Kyoto-lite pattern)
+  - Proof-of-reserves via Merkle-sum-tree
+
+WILD (ambitious, multi-part, high payoff, best differentiation):
+  - Compliant privacy pool with ASP allow/deny list (0xbow Privacy Pools port) — matches 2 of Stellar's
+    own listed ideas directly, has a live reference implementation to study
+  - Multi-asset shielded pool / UTXO payment system (Roman Kyoto full port)
+  - zkTLS-based P2P fiat on/offramp using RISC Zero (ZKP2P pattern)
+  - Cross-chain BN254 light-client bridge leveraging Stellar's new native host functions (zkBridge
+    pattern) — most "on-brand" given Stellar's own protocol investment in Protocol 25/26
+  - Verifiable off-chain ML/credit-score computation via RISC Zero zkVM + Groth16 + Soroban (zkora
+    pattern)
+
+Note on sourcing: URLs above are as found by the research pass; verify directly before citing in a
+submission, and independently confirm any item flagged "not fully confirmed" (e.g. priv.cast).
