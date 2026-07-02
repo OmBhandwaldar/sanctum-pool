@@ -42,3 +42,8 @@ web/dist/
 
 # installed agent skills (tooling, not project code)
 .agents/
+
+# web-served circuit artifacts (copied from circuits/ by sync-circuits)
+web/public/circuits/*.wasm
+web/public/circuits/*.zkey
+web/public/circuits/*.json
