@@ -3,7 +3,7 @@ pragma circom 2.0.0;
 include "poseidon.circom";
 include "merkle.circom";
 
-// Sanctum Pool — withdrawal circuit (M1: state membership + nullifier).
+// Sanctum Pool — withdrawal circuit (compliant privacy pool).
 //
 // Note scheme (fixed denomination):
 //   precommitment = Poseidon(nullifier, secret)
@@ -11,15 +11,19 @@ include "merkle.circom";
 //   commitment    = Poseidon(amount, label, precommitment)   // leaf in state tree
 //   nullifierHash = Poseidon(nullifier)                      // public, prevents double-spend
 //
-// This M1 version proves the note's commitment is in the state tree and
-// reveals a correctly-derived nullifierHash, bound to a recipient. The ASP
-// association-set membership check on `label` is added in M3.
+// The withdrawal proves BOTH:
+//   1. the commitment is in the state tree (root), and
+//   2. the label is in the ASP approved association set (aspRoot),
+// while revealing neither which deposit nor which approved label is ours —
+// only that we are inside the compliance-approved set. A fresh nullifierHash
+// prevents double-spends, and `recipient` is bound to stop relayer malleation.
 //
-// Public signals: nullifierHash (output), then root, recipient, amount, scope.
-// `recipient` is bound into the constraint system so a relayer cannot swap it.
+// Public signals: nullifierHash (output), then root, aspRoot, recipient,
+// amount, scope.
 template Withdraw(levels) {
     // ---- public ----
     signal input root;        // state Merkle root
+    signal input aspRoot;     // ASP approved-label Merkle root
     signal input recipient;   // withdrawal destination (bound, anti-frontrunning)
     signal input amount;      // fixed denomination
     signal input scope;       // pool/asset domain separator
@@ -30,6 +34,8 @@ template Withdraw(levels) {
     signal input nonce;
     signal input pathElements[levels];
     signal input pathIndices[levels];
+    signal input aspPathElements[levels];
+    signal input aspPathIndices[levels];
 
     // ---- output ----
     signal output nullifierHash;
@@ -64,9 +70,18 @@ template Withdraw(levels) {
         merkle.pathIndices[i] <== pathIndices[i];
     }
 
+    // ASP association-set membership of the label
+    component asp = MerkleProof(levels);
+    asp.leaf <== lab.out;
+    asp.root <== aspRoot;
+    for (var i = 0; i < levels; i++) {
+        asp.pathElements[i] <== aspPathElements[i];
+        asp.pathIndices[i] <== aspPathIndices[i];
+    }
+
     // bind recipient into the proof (no logic effect, prevents malleation)
     signal recipientSquare;
     recipientSquare <== recipient * recipient;
 }
 
-component main {public [root, recipient, amount, scope]} = Withdraw(20);
+component main {public [root, aspRoot, recipient, amount, scope]} = Withdraw(20);
