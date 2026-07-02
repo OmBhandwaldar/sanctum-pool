@@ -1,0 +1,11 @@
+{
+  "name": "sanctum-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sanctum Pool client: note generation, Merkle tree, witness input, proving",
+  "license": "MIT",
+  "dependencies": {
+    "circomlibjs": "^0.1.7"
+  }
+}
