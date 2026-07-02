@@ -7,10 +7,14 @@
 
 ## ⚑ DECISION LOG
 
-**M0 outcome (empirical) — curve switched from BN254 → BLS12-381.** M0 confirmed the *proven, working* Circom→Soroban Groth16 reference (Bachini `CircomStellar`, MIT) is **BLS12-381**, not BN254 as earlier research wrongly claimed. Reproduced it end-to-end: a Groth16 proof verified `true` on testnet (contract `CCYJ4222TMPIKF2JDKYENJAJPYHACQN5QHYKQAK6RZ6QFSNLYKGYJDBW`). BN254 host functions exist (P25/P26) but have **no working end-to-end Circom→Soroban reference** to lean on within our time budget.
-- **Decision:** verifier + proving = **Groth16 over BLS12-381** (reuse the proven verifier + arkworks conversion tool). Still native on-chain ZK verification via `env.crypto().bls12_381().pairing_check`.
-- **New-primitive story preserved via Poseidon (P25/CAP-0075):** on-chain Merkle tree uses the *native Poseidon* host function — a genuinely new P25 primitive — over the BLS12-381 field. circomlib Poseidon constants are all `< BN254 r < BLS12-381 r`, so they're valid field elements under `-p bls12381` (no reduction) → circuit and host can match.
-- BN254 port noted as straightforward future work in README.
+**Step 1 — reproduced proven BLS12-381 reference (de-risk).** M0 confirmed Bachini `CircomStellar` (MIT) is BLS12-381 (earlier research wrongly said BN254). Reproduced end-to-end: proof verified `true` on testnet. This proved the toolchain works.
+
+**Step 2 — pivoted the whole stack to BN254 (validated).** Rather than keep BLS12-381, ported the verifier + conversion tool to **BN254** and validated a proof verifies `true` on testnet (`CDCHDMIRXYO6TZOOMPGUW3CSE5DZCJZQCGNUUSO3WTMB3MY6I4EAZRXF`). Why BN254 wins overall:
+- **Poseidon matching becomes free.** circomlibjs (BN254) ↔ circom `bn128` default ↔ native BN254 Poseidon host fn all share one field. Under BLS12-381 we'd have had to hand-roll a matching Poseidon in JS *and* on-chain — the bigger recurring risk (hits M1/M2/M3 witness gen + on-chain tree).
+- **Best narrative:** BN254 is *the* Protocol 25/26 headline primitive the hackathon exists to showcase.
+- **Verifier port was mechanical:** swap `crypto::bls12_381` → `crypto::bn254` (G1 64B / G2 128B).
+- **Encoding footgun solved:** Stellar's BN254 host wants **big-endian** coords, G2 Fp2 as `be(c1)||be(c0)` (imaginary-first, EIP-197). Arkworks (LE, c0-first) was rejected with a flag-bit error; conversion tool now emits BE directly (no arkworks).
+- **Verifier + proving:** Groth16 over **BN254** via `env.crypto().bn254().pairing_check`. Circuits compile with circom default (`bn128`). Proof = single pairing check.
 
 ---
 
