@@ -15,8 +15,11 @@ B="$ROOT/circuits/build"
 J() { node -e "console.log(require('$B/withdraw_meta.json').$1)"; }
 inv() { stellar contract invoke "$@" ; }
 
-echo "== deploy verifier (nPublic=6 VK) =="
+ADMIN="$(stellar keys address sanctum)"
+
+echo "== deploy + init verifier (admin-gated set_vk) =="
 VERIFIER="$(stellar contract deploy --wasm target/wasm32v1-none/release/sanctum_verifier.wasm --network $NET 2>/dev/null | grep -Eo 'C[A-Z0-9]{55}' | tail -1)"
+inv --id "$VERIFIER" --network $NET -- init --admin "$ADMIN" >/dev/null
 inv --id "$VERIFIER" --network $NET -- set_vk --vk_bytes "$("$CONV" vk circuits/keys/withdraw_vk.json)" >/dev/null
 echo "verifier: $VERIFIER"; echo "$VERIFIER" > deployments/verifier_testnet.txt
 
@@ -24,15 +27,15 @@ echo "== token + recipient + pool =="
 stellar contract asset deploy --asset native --network $NET >/dev/null 2>&1 || true
 TOKEN="$(stellar contract id asset --asset native --network $NET)"
 stellar keys generate recipient1 --network $NET --fund --overwrite >/dev/null 2>&1 || true
-RECIP="$(stellar keys address recipient1)"; ADMIN="$(stellar keys address sanctum)"
+RECIP="$(stellar keys address recipient1)"
 POOL="$(stellar contract deploy --wasm target/wasm32v1-none/release/sanctum_pool.wasm --network $NET 2>/dev/null | grep -Eo 'C[A-Z0-9]{55}' | tail -1)"
 echo "pool: $POOL"; echo "$POOL" > deployments/pool_testnet.txt
 inv --id "$POOL" --network $NET -- init --verifier "$VERIFIER" --token "$TOKEN" \
   --admin "$ADMIN" --denom_amount 1000000 --denom_field 1000000 --scope 1 >/dev/null
 
 echo ""; echo "########## 1. APPROVED PRIVATE PAYMENT ##########"
-node client/src/genWithdrawInput.js 12345 approved >/dev/null
-COMMIT="$(J commitment)"; ROOTV="$(J root)"; NH="$(J nullifierHash)"; RECF="$(J recipient)"
+node client/src/genWithdrawInput.js "$RECIP" approved >/dev/null
+COMMIT="$(J commitment)"; ROOTV="$(J root)"; NH="$(J nullifierHash)"
 ASPROOT="$(J aspRoot)"; LABEL="$(J label)"; ENC="$(J encNote)"; DKEY="$(J disclosureKey)"
 
 echo "-- deposit (commitment + on-chain encrypted note) --"
@@ -48,8 +51,15 @@ node "$B/withdraw_js/generate_witness.js" "$B/withdraw_js/withdraw.wasm" "$B/wit
 "$SNARK" groth16 prove "$B/withdraw_final.zkey" "$B/withdraw.wtns" "$B/proof.json" "$B/public.json" >/dev/null 2>&1
 PROOF_HEX="$("$CONV" proof "$B/proof.json")"
 BAL0="$(inv --id "$TOKEN" --network $NET -- balance --id "$RECIP" 2>/dev/null)"
+echo "-- front-running attempt: same proof, attacker payout address (must fail) --"
+if inv --id "$POOL" --network $NET -- withdraw --proof_bytes "$PROOF_HEX" --nullifier_hash "$NH" \
+     --root "$ROOTV" --asp_root "$ASPROOT" --recipient "$ADMIN" >/dev/null 2>&1; then
+  echo "   ERROR: front-run succeeded"; exit 1
+else
+  echo "   OK: proof rejected for a different payout address (recipient bound on-chain)"
+fi
 inv --id "$POOL" --network $NET -- withdraw --proof_bytes "$PROOF_HEX" --nullifier_hash "$NH" \
-  --root "$ROOTV" --asp_root "$ASPROOT" --recipient_field "$RECF" --recipient "$RECIP" >/dev/null
+  --root "$ROOTV" --asp_root "$ASPROOT" --recipient "$RECIP" >/dev/null
 BAL1="$(inv --id "$TOKEN" --network $NET -- balance --id "$RECIP" 2>/dev/null)"
 echo "   recipient balance: $BAL0 -> $BAL1  (private, ASP-compliant withdrawal OK)"
 
@@ -59,7 +69,7 @@ echo "-- auditor pulls the encrypted note from chain and is given ONE disclosure
 node client/src/auditorReveal.js "$ENC_ONCHAIN" "$DKEY" "$COMMIT"
 
 echo ""; echo "########## 3. DENIED DEPOSIT (compliance gating) ##########"
-node client/src/genWithdrawInput.js 12345 denied >/dev/null
+node client/src/genWithdrawInput.js "$RECIP" denied >/dev/null
 if node "$B/withdraw_js/generate_witness.js" "$B/withdraw_js/withdraw.wasm" "$B/withdraw_input.json" "$B/withdraw_denied.wtns" >/dev/null 2>&1; then
   echo "ERROR: denied note produced a witness"; exit 1
 else
