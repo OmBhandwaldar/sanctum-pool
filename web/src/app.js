@@ -46,7 +46,8 @@ async function connect() {
     render();
     toast("Wallet connected");
   } catch (e) {
-    toast("Connection cancelled", "err");
+    const msg = e?.message || String(e);
+    toast(msg === "cancelled" ? "Connection cancelled" : "Wallet error: " + msg, "err");
   }
 }
 function requireWallet() {

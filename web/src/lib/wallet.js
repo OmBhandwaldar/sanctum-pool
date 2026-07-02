@@ -27,18 +27,22 @@ export function getAddress() {
 export async function connect() {
   const k = getKit();
   return new Promise((resolve, reject) => {
+    let selected = false;
     k.openModal({
       onWalletSelected: async (option) => {
-        try {
-          k.setWallet(option.id);
+        selected = true; // the modal closes right after selection; don't let
+        try {            // onClosed reject the still-pending async getAddress.
+          await k.setWallet(option.id);
           const res = await k.getAddress();
           address = res.address;
           resolve(address);
         } catch (e) {
-          reject(e);
+          reject(new Error(e?.message || "could not get address from wallet"));
         }
       },
-      onClosed: (err) => reject(err || new Error("wallet selection cancelled")),
+      onClosed: () => {
+        if (!selected) reject(new Error("cancelled"));
+      },
     });
   });
 }
