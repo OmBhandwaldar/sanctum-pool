@@ -9,6 +9,7 @@ import { dirname, resolve } from "path";
 import { createNote, commitmentOf, nullifierHashOf, labelOf } from "./note.js";
 import { MerkleTree } from "./merkle.js";
 import { toDec, randomField } from "./field.js";
+import { genViewKeypair, encryptNote, blobToHex } from "./viewkey.js";
 
 const LEVELS = 20;
 
@@ -60,6 +61,21 @@ async function main() {
   const outPath = resolve(here, "../../circuits/build/withdraw_input.json");
   writeFileSync(outPath, JSON.stringify(input, null, 2));
 
+  // view-key selective disclosure: encrypt the note plaintext to an auditor's
+  // viewing key and anchor it on-chain with the deposit.
+  const { input: fullInput } = { input };
+  const auditor = genViewKeypair();
+  const notePlain = {
+    amount: toDec(fullInput.amount),
+    scope: toDec(fullInput.scope),
+    nonce: toDec(fullInput.nonce),
+    nullifier: toDec(fullInput.nullifier),
+    secret: toDec(fullInput.secret),
+    recipient: toDec(recipient),
+    commitment: toDec(commitment),
+  };
+  const { blob, disclosureKey } = encryptNote(notePlain, auditor.vpk);
+
   const meta = {
     commitment: toDec(commitment),
     label: toDec(label),
@@ -70,6 +86,10 @@ async function main() {
     amount: toDec(input.amount),
     scope: toDec(input.scope),
     approved,
+    encNote: blobToHex(blob),
+    disclosureKey,
+    auditorVsk: auditor.vsk,
+    auditorVpk: auditor.vpk,
   };
   const metaPath = resolve(here, "../../circuits/build/withdraw_meta.json");
   writeFileSync(metaPath, JSON.stringify(meta, null, 2));
