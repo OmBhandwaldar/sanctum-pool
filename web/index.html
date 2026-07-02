@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sanctum Pool — Auditor Reveal</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; min-height: 100vh; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        background: radial-gradient(1200px 600px at 20% -10%, #1b2a4a 0%, #0b1020 55%, #070a14 100%);
+        color: #e8ecf5; display: flex; align-items: center; justify-content: center; padding: 32px;
+      }
+      .card {
+        width: 100%; max-width: 760px; background: rgba(18,24,44,.72);
+        border: 1px solid rgba(120,150,220,.22); border-radius: 18px; padding: 30px 32px;
+        box-shadow: 0 24px 70px rgba(0,0,0,.5); backdrop-filter: blur(8px);
+      }
+      .badge { display:inline-block; font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+        color:#8fb4ff; border:1px solid rgba(120,150,220,.35); border-radius:999px; padding:5px 12px; }
+      h1 { font-size: 26px; margin: 14px 0 6px; }
+      p.sub { color:#9fb0d0; margin:0 0 22px; line-height:1.5; }
+      label { display:block; font-size:12.5px; color:#9fb0d0; margin:14px 0 6px; letter-spacing:.02em; }
+      textarea, input {
+        width:100%; background:#0c1327; color:#dfe6f5; border:1px solid rgba(120,150,220,.25);
+        border-radius:10px; padding:11px 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size:12.5px; resize:vertical;
+      }
+      textarea { min-height:64px; word-break:break-all; }
+      .row { display:flex; gap:12px; } .row > div { flex:1; }
+      button {
+        margin-top:20px; width:100%; padding:13px; font-size:15px; font-weight:600; color:#06122b;
+        background: linear-gradient(90deg,#7cc0ff,#9a8bff); border:0; border-radius:11px; cursor:pointer;
+      }
+      button:disabled { opacity:.6; cursor:default; }
+      .out { margin-top:22px; border-top:1px solid rgba(120,150,220,.18); padding-top:18px; display:none; }
+      .kv { display:flex; justify-content:space-between; gap:16px; padding:7px 0; font-size:14px; border-bottom:1px dashed rgba(120,150,220,.12); }
+      .kv span:first-child { color:#9fb0d0; } .kv span:last-child { font-family: ui-monospace, monospace; }
+      .check { display:flex; align-items:center; gap:10px; margin-top:12px; font-size:14px; }
+      .ok { color:#5ee6a8; } .bad { color:#ff7b8a; }
+      .verdict { margin-top:16px; padding:12px 14px; border-radius:10px; font-weight:600; text-align:center; }
+      .verdict.ok { background:rgba(94,230,168,.12); color:#7dffc0; border:1px solid rgba(94,230,168,.35); }
+      .verdict.bad { background:rgba(255,123,138,.12); color:#ff9aa6; border:1px solid rgba(255,123,138,.35); }
+      .hint { font-size:12px; color:#7f8fb0; margin-top:8px; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <span class="badge">Sanctum Pool · Selective Disclosure</span>
+      <h1>Auditor Reveal</h1>
+      <p class="sub">
+        A private, ASP-compliant payment leaks nothing on-chain. With a single
+        <b>disclosure key</b> for one transaction, an auditor can decrypt exactly
+        that note and prove it corresponds to the on-chain deposit — without
+        seeing anything else. Privacy from the public, transparency on demand.
+      </p>
+
+      <label>Encrypted note (from chain, hex)</label>
+      <textarea id="enc"></textarea>
+
+      <div class="row">
+        <div>
+          <label>Disclosure key (revealed for ONE tx)</label>
+          <input id="key" />
+        </div>
+        <div>
+          <label>On-chain commitment</label>
+          <input id="commitment" />
+        </div>
+      </div>
+
+      <button id="go">Reveal &amp; verify against chain</button>
+      <div class="hint" id="hint">Prefilled with an example from the latest testnet run.</div>
+
+      <div class="out" id="out">
+        <div class="kv"><span>amount</span><span id="o-amount"></span></div>
+        <div class="kv"><span>recipient</span><span id="o-recipient"></span></div>
+        <div class="kv"><span>commitment (decrypted)</span><span id="o-commitment"></span></div>
+        <div class="check" id="c1"></div>
+        <div class="check" id="c2"></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
