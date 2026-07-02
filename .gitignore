@@ -30,3 +30,7 @@ stellar-keys/
 .DS_Store
 .idea/
 *.swp
+
+# keep committed production keys
+!circuits/keys/
+!circuits/keys/**
