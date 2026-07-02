@@ -39,3 +39,6 @@ stellar-keys/
 asp-service/approved.json
 
 web/dist/
+
+# installed agent skills (tooling, not project code)
+.agents/
