@@ -32,6 +32,7 @@ pub enum PoolError {
     InvalidProof = 5,
     WrongAmount = 6,
     WrongScope = 7,
+    UnknownAspRoot = 8,
 }
 
 #[contracttype]
@@ -40,6 +41,7 @@ enum DataKey {
     Config,
     Commitments,
     Roots,
+    AspRoots,
     Nullifier(U256),
 }
 
@@ -104,6 +106,9 @@ impl SanctumPool {
         env.storage()
             .instance()
             .set(&DataKey::Roots, &Vec::<U256>::new(&env));
+        env.storage()
+            .instance()
+            .set(&DataKey::AspRoots, &Vec::<U256>::new(&env));
         Ok(())
     }
 
@@ -159,6 +164,34 @@ impl SanctumPool {
         roots.iter().any(|r| r == root)
     }
 
+    /// Admin (ASP authority) posts the approved-association-set root.
+    pub fn update_asp_root(env: Env, asp_root: U256) -> Result<(), PoolError> {
+        let cfg = get_config(&env)?;
+        cfg.admin.require_auth();
+
+        let mut roots: Vec<U256> = env
+            .storage()
+            .instance()
+            .get(&DataKey::AspRoots)
+            .unwrap_or(Vec::new(&env));
+        roots.push_back(asp_root.clone());
+        while roots.len() > RECENT_ROOTS {
+            roots.remove(0);
+        }
+        env.storage().instance().set(&DataKey::AspRoots, &roots);
+        env.events().publish((symbol_short!("asproot"),), asp_root);
+        Ok(())
+    }
+
+    pub fn is_known_asp_root(env: Env, asp_root: U256) -> bool {
+        let roots: Vec<U256> = env
+            .storage()
+            .instance()
+            .get(&DataKey::AspRoots)
+            .unwrap_or(Vec::new(&env));
+        roots.iter().any(|r| r == asp_root)
+    }
+
     pub fn is_spent(env: Env, nullifier_hash: U256) -> bool {
         env.storage()
             .persistent()
@@ -175,12 +208,13 @@ impl SanctumPool {
     /// Withdraw one denomination to `recipient` by spending a note.
     ///
     /// Public signals (order fixed by the circuit):
-    ///   [nullifier_hash, root, recipient_field, amount, scope]
+    ///   [nullifier_hash, root, asp_root, recipient_field, amount, scope]
     pub fn withdraw(
         env: Env,
         proof_bytes: Bytes,
         nullifier_hash: U256,
         root: U256,
+        asp_root: U256,
         recipient_field: U256,
         recipient: Address,
     ) -> Result<(), PoolError> {
@@ -189,6 +223,10 @@ impl SanctumPool {
         // root must be one the admin has posted recently
         if !Self::is_known_root(env.clone(), root.clone()) {
             return Err(PoolError::UnknownRoot);
+        }
+        // ASP-approved association-set root must be known too
+        if !Self::is_known_asp_root(env.clone(), asp_root.clone()) {
+            return Err(PoolError::UnknownAspRoot);
         }
         // nullifier must be unspent
         if env
@@ -203,6 +241,7 @@ impl SanctumPool {
         let signals = [
             nullifier_hash.clone(),
             root,
+            asp_root,
             recipient_field,
             cfg.denom_field.clone(),
             cfg.scope.clone(),
