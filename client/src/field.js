@@ -1,5 +1,6 @@
 // BN254 scalar field helpers (matches circom bn128 + circomlibjs Poseidon).
-import { randomBytes } from "crypto";
+// Uses the Web Crypto API (available in Node 18+ and browsers) so the same
+// modules run in the CLI and in the web reveal page.
 
 // BN254 scalar field modulus r.
 export const FIELD =
@@ -7,7 +8,9 @@ export const FIELD =
 
 // A uniformly-random field element (rejection-free: reduce 32 random bytes).
 export function randomField() {
-  const hex = randomBytes(32).toString("hex");
+  const bytes = new Uint8Array(32);
+  globalThis.crypto.getRandomValues(bytes);
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
   return BigInt("0x" + hex) % FIELD;
 }
 
