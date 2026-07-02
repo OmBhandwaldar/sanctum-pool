@@ -46,10 +46,22 @@ async function main() {
   const outPath = resolve(here, "../../circuits/build/withdraw_input.json");
   writeFileSync(outPath, JSON.stringify(input, null, 2));
 
-  console.log("commitment   :", toDec(commitment));
-  console.log("nullifierHash:", toDec(nullifierHash));
-  console.log("root         :", toDec(root));
+  const meta = {
+    commitment: toDec(commitment),
+    nullifierHash: toDec(nullifierHash),
+    root: toDec(root),
+    recipient: toDec(recipient),
+    amount: toDec(input.amount),
+    scope: toDec(input.scope),
+  };
+  const metaPath = resolve(here, "../../circuits/build/withdraw_meta.json");
+  writeFileSync(metaPath, JSON.stringify(meta, null, 2));
+
+  console.log("commitment   :", meta.commitment);
+  console.log("nullifierHash:", meta.nullifierHash);
+  console.log("root         :", meta.root);
   console.log("wrote        :", outPath);
+  console.log("wrote        :", metaPath);
 }
 
 main().catch((e) => {
