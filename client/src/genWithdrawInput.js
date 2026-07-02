@@ -6,23 +6,35 @@
 import { writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
-import { createNote, commitmentOf, nullifierHashOf } from "./note.js";
+import { createNote, commitmentOf, nullifierHashOf, labelOf } from "./note.js";
 import { MerkleTree } from "./merkle.js";
-import { toDec } from "./field.js";
+import { toDec, randomField } from "./field.js";
 
 const LEVELS = 20;
 
-export async function buildWithdrawInput({ recipient = 12345n } = {}) {
+// Build a withdraw witness. When `approved` is true the note's label is placed
+// in the ASP tree (a valid association-set membership proof exists); when false
+// the ASP tree holds an unrelated label, so no valid proof exists and witness
+// generation fails — demonstrating that a non-approved deposit cannot withdraw.
+export async function buildWithdrawInput({ recipient = 12345n, approved = true } = {}) {
   const note = createNote();
   const commitment = await commitmentOf(note);
   const nullifierHash = await nullifierHashOf(note);
+  const label = await labelOf(note);
 
+  // state tree contains the commitment
   const tree = await MerkleTree.create(LEVELS);
   const index = tree.insert(commitment);
   const { root, pathElements, pathIndices } = await tree.proof(index);
 
+  // ASP tree contains the approved label (or an unrelated one if denied)
+  const aspTree = await MerkleTree.create(LEVELS);
+  aspTree.insert(approved ? label : randomField());
+  const asp = await aspTree.proof(0);
+
   const input = {
     root: toDec(root),
+    aspRoot: toDec(asp.root),
     recipient: toDec(recipient),
     amount: toDec(note.amount),
     scope: toDec(note.scope),
@@ -31,16 +43,18 @@ export async function buildWithdrawInput({ recipient = 12345n } = {}) {
     nonce: toDec(note.nonce),
     pathElements: pathElements.map(toDec),
     pathIndices: pathIndices.map((x) => toDec(x)),
+    aspPathElements: asp.pathElements.map(toDec),
+    aspPathIndices: asp.pathIndices.map((x) => toDec(x)),
   };
 
-  return { input, note, commitment, nullifierHash, root };
+  return { input, note, commitment, nullifierHash, root, label, aspRoot: asp.root };
 }
 
 async function main() {
   const recipient = process.argv[2] ? BigInt(process.argv[2]) : 12345n;
-  const { input, commitment, nullifierHash, root } = await buildWithdrawInput({
-    recipient,
-  });
+  const approved = process.argv[3] !== "denied";
+  const { input, commitment, nullifierHash, root, label, aspRoot } =
+    await buildWithdrawInput({ recipient, approved });
 
   const here = dirname(fileURLToPath(import.meta.url));
   const outPath = resolve(here, "../../circuits/build/withdraw_input.json");
@@ -48,11 +62,14 @@ async function main() {
 
   const meta = {
     commitment: toDec(commitment),
+    label: toDec(label),
     nullifierHash: toDec(nullifierHash),
     root: toDec(root),
+    aspRoot: toDec(aspRoot),
     recipient: toDec(recipient),
     amount: toDec(input.amount),
     scope: toDec(input.scope),
+    approved,
   };
   const metaPath = resolve(here, "../../circuits/build/withdraw_meta.json");
   writeFileSync(metaPath, JSON.stringify(meta, null, 2));
