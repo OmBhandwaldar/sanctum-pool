@@ -36,8 +36,8 @@ Public signals (fixed by the circuit): `[nullifierHash, root, aspRoot, recipient
 
 | Component | Contract ID |
 |---|---|
-| Verifier (Groth16 / BN254) | `CAVZB37I2YHUINDZDQJ6OGDWHL43IN3GLT7SB3HX6KOUNIBQ4BC3R7AO` |
-| Pool | `CDNHJZUGZL7RHVMXFLOENWXQQOYIB2NGLGXN5AQP5OCES57XWWBN7VU6` |
+| Verifier (Groth16 / BN254) | `CABTLTW2QAFBU674HZIDQDSWE5YAK3UL675L5QS3IOKA4VIR7FOE2VDC` |
+| Pool | `CB5YM3AXTU3KGUYWL7RRN7QZ4TE7SGNS2VJS6SIT4PKSS72Y426UCUB5` |
 
 (Latest IDs are always in [`deployments/`](deployments/). Re-run `scripts/e2e.sh` to deploy your own.)
 
@@ -99,12 +99,13 @@ scripts/e2e.sh
 - Deposit → withdraw **unlinkability**; **nullifier** double-spend prevention (enforced on-chain).
 - **ASP dual-membership** gating — non-approved deposits provably cannot withdraw (enforced *inside the circuit*).
 - **View-key selective disclosure** — encrypted notes anchored on-chain; an auditor decrypts exactly one transaction and verifies it against the on-chain commitment.
+- **Recipient bound on-chain** — the payout address is derived on-chain and must match the proof, so a mempool front-runner cannot redirect a withdrawal (verified by a negative test in `scripts/e2e.sh`).
+- **Admin-gated verifier** — the verifying key can only be set by the admin, so the verifier can't be swapped to accept forged proofs.
 
 **Mocked / simplified (clearly scoped for the hackathon):**
 - **ASP screening intelligence** is a manual admin allow/deny toggle, not a live sanctions/AML API. (The *mechanism* that enforces approval is real; only the decision source is mocked.)
 - **State-tree root** is derived from the on-chain commitment list and **posted by an admin ("sequencer")** rather than recomputed on-chain. Anyone can re-derive and check it. Computing the Merkle root on-chain with the native **Poseidon** host function is the natural next step (see below).
 - **Single asset, fixed denomination**; single trusted ASP authority; testnet only; unaudited.
-- Recipient is bound *inside the proof* but not yet re-derived from the destination address on-chain (no relayer is used in the demo).
 
 ---
 
