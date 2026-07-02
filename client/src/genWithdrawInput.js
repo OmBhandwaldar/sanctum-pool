@@ -6,51 +6,12 @@
 import { writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
-import { createNote, commitmentOf, nullifierHashOf, labelOf } from "./note.js";
-import { MerkleTree } from "./merkle.js";
-import { toDec, randomField } from "./field.js";
+import { toDec } from "./field.js";
 import { genViewKeypair, encryptNote, blobToHex } from "./viewkey.js";
 import { recipientField } from "./address.js";
+import { buildWithdrawInput } from "./withdrawInput.js";
 
-const LEVELS = 20;
-
-// Build a withdraw witness. When `approved` is true the note's label is placed
-// in the ASP tree (a valid association-set membership proof exists); when false
-// the ASP tree holds an unrelated label, so no valid proof exists and witness
-// generation fails — demonstrating that a non-approved deposit cannot withdraw.
-export async function buildWithdrawInput({ recipient = 12345n, approved = true } = {}) {
-  const note = createNote();
-  const commitment = await commitmentOf(note);
-  const nullifierHash = await nullifierHashOf(note);
-  const label = await labelOf(note);
-
-  // state tree contains the commitment
-  const tree = await MerkleTree.create(LEVELS);
-  const index = tree.insert(commitment);
-  const { root, pathElements, pathIndices } = await tree.proof(index);
-
-  // ASP tree contains the approved label (or an unrelated one if denied)
-  const aspTree = await MerkleTree.create(LEVELS);
-  aspTree.insert(approved ? label : randomField());
-  const asp = await aspTree.proof(0);
-
-  const input = {
-    root: toDec(root),
-    aspRoot: toDec(asp.root),
-    recipient: toDec(recipient),
-    amount: toDec(note.amount),
-    scope: toDec(note.scope),
-    nullifier: toDec(note.nullifier),
-    secret: toDec(note.secret),
-    nonce: toDec(note.nonce),
-    pathElements: pathElements.map(toDec),
-    pathIndices: pathIndices.map((x) => toDec(x)),
-    aspPathElements: asp.pathElements.map(toDec),
-    aspPathIndices: asp.pathIndices.map((x) => toDec(x)),
-  };
-
-  return { input, note, commitment, nullifierHash, root, label, aspRoot: asp.root };
-}
+export { buildWithdrawInput };
 
 async function main() {
   // recipient is a Stellar strkey; the bound field is derived exactly as the
