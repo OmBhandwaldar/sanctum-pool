@@ -1,0 +1,8 @@
+{
+  "name": "sanctum-asp-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sanctum ASP curator: maintains the approved-label association set and its Merkle root",
+  "license": "MIT"
+}
