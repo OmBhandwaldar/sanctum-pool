@@ -1,20 +1,17 @@
 // Wallet layer: connect Freighter (and other Stellar wallets) via Stellar
 // Wallets Kit, expose the address and a signXdr() the soroban layer can call.
-import {
-  StellarWalletsKit,
-  WalletNetwork,
-  FreighterModule,
-  xBullModule,
-  FREIGHTER_ID,
-} from "@creit.tech/stellar-wallets-kit";
+import { StellarWalletsKit, Networks } from "@creit.tech/stellar-wallets-kit";
+import { FreighterModule, FREIGHTER_ID } from "@creit.tech/stellar-wallets-kit/modules/freighter";
+import { xBullModule } from "@creit.tech/stellar-wallets-kit/modules/xbull";
 
+const TESTNET = Networks.TESTNET;
 let kit = null;
 let address = null;
 
 function getKit() {
   if (!kit) {
     kit = new StellarWalletsKit({
-      network: WalletNetwork.TESTNET,
+      network: TESTNET,
       selectedWalletId: FREIGHTER_ID,
       modules: [new FreighterModule(), new xBullModule()],
     });
@@ -55,7 +52,7 @@ export async function signXdr(xdrBase64) {
   if (!address) throw new Error("wallet not connected");
   const { signedTxXdr } = await getKit().signTransaction(xdrBase64, {
     address,
-    networkPassphrase: WalletNetwork.TESTNET,
+    networkPassphrase: TESTNET,
   });
   return signedTxXdr;
 }
