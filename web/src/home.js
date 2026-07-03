@@ -13,6 +13,8 @@ const A = {
   down: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m6 13 6 6 6-6"/></svg>',
   lock: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="11" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>',
   check: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  ok: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  x: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>',
   eye: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
   route: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>',
   fork: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
@@ -48,31 +50,34 @@ export function viewHome() {
     </div>
   </section>
 
-  <!-- THE GAP -->
+  <!-- DOES / DOESN'T -->
   <section class="hx-sec" id="gap">
-    <span class="hx-tag" data-reveal>The gap</span>
-    <h2 class="hx-h2" data-reveal>
-      Transparent chains expose everyone.<br>
-      Mixers hide everyone — <span class="hx-dim">including criminals.</span>
-    </h2>
-    <div class="hx-tri">
-      <div class="hx-tri-card" data-reveal>
-        <div class="hx-tri-k">Public chains</div>
-        <p>Every payment is visible forever. No financial privacy for salaries, suppliers, or treasuries.</p>
+    <span class="hx-tag" data-reveal>Positioning</span>
+    <h2 class="hx-h2" data-reveal>Private and compliant.<br>On purpose.</h2>
+    <div class="hx-dd">
+      <div class="hx-dd-col hx-dd-do" data-reveal>
+        <div class="hx-dd-head"><span class="hx-dd-badge do">Does</span> What Sanctum does</div>
+        <ul>
+          <li><span class="hx-dd-i">${A.ok}</span> Private, unlinkable withdrawals to a fresh address</li>
+          <li><span class="hx-dd-i">${A.ok}</span> Compliance-gated by the ASP association set</li>
+          <li><span class="hx-dd-i">${A.ok}</span> Any single payment provable to an auditor</li>
+          <li><span class="hx-dd-i">${A.ok}</span> Verified on-chain via Stellar's native BN254</li>
+        </ul>
       </div>
-      <div class="hx-tri-card" data-reveal>
-        <div class="hx-tri-k">Plain mixers</div>
-        <p>Real privacy, but tainted funds are indistinguishable from honest ones — so they get sanctioned.</p>
-      </div>
-      <div class="hx-tri-card hx-tri-hi" data-reveal>
-        <div class="hx-tri-k">Sanctum Pool</div>
-        <p>Private <em>and</em> compliant: only screened deposits withdraw, and any single payment is provable to an auditor.</p>
+      <div class="hx-dd-col hx-dd-dont" data-reveal>
+        <div class="hx-dd-head"><span class="hx-dd-badge dont">Won't</span> What it won't do</div>
+        <ul>
+          <li><span class="hx-dd-i dont">${A.x}</span> Hide criminals — only screened deposits withdraw</li>
+          <li><span class="hx-dd-i dont">${A.x}</span> Expose your finances on a public chain</li>
+          <li><span class="hx-dd-i dont">${A.x}</span> Custody your funds — you hold the note</li>
+          <li><span class="hx-dd-i dont">${A.x}</span> Ask you to trust us — the proof enforces every rule</li>
+        </ul>
       </div>
     </div>
   </section>
 
   <!-- HOW IT WORKS -->
-  <section class="hx-sec" id="how">
+  <section class="hx-sec" id="how"><div class="hx-panel">
     <span class="hx-tag" data-reveal>How it works</span>
     <h2 class="hx-h2" data-reveal>Four moves. Zero links.</h2>
     <div class="hx-steps">
@@ -87,11 +92,11 @@ export function viewHome() {
           <h3>${t}</h3><p>${d}</p>
         </div>`).join("")}
     </div>
-  </section>
+  </div></section>
 
   <!-- WHAT THE ZK PROVES (textured band) -->
   <section class="hx-band" id="proof-band">
-    <div class="hx-band-inner">
+    <div class="hx-band-inner"><div class="hx-panel hx-panel-band">
       <span class="hx-tag" data-reveal>Load-bearing ZK</span>
       <h2 class="hx-h2" data-reveal>One proof.<br>Four guarantees.</h2>
       <p class="hx-lead" data-reveal>A withdrawal is impossible without a valid Groth16 proof — verified on-chain by Stellar's native BN254 <code>pairing_check</code>. In one proof, revealing nothing about which deposit is yours:</p>
@@ -112,11 +117,11 @@ precommitment = <span class="f">Poseidon</span>(nullifier, secret)
 label         = <span class="f">Poseidon</span>(scope, nonce)
 commitment    = <span class="f">Poseidon</span>(amount, label, precommitment)  <span class="c">// leaf</span>
 nullifierHash = <span class="f">Poseidon</span>(nullifier)                     <span class="c">// public</span></code></pre>
-    </div>
+    </div></div>
   </section>
 
   <!-- LIVE -->
-  <section class="hx-sec" id="live">
+  <section class="hx-sec" id="live"><div class="hx-panel">
     <span class="hx-tag" data-reveal>Live on testnet</span>
     <h2 class="hx-h2" data-reveal>Verified on-chain. Right now.</h2>
     <div class="hx-live">
@@ -135,7 +140,7 @@ nullifierHash = <span class="f">Poseidon</span>(nullifier)                     <
         </a>
       </div>
     </div>
-  </section>
+  </div></section>
 
   <!-- CTA -->
   <section class="hx-cta">

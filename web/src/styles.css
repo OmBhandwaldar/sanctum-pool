@@ -315,16 +315,27 @@ html[data-page="home"] #view { display: block !important; }
   font: 500 12.5px var(--mono); color: var(--fg-45); letter-spacing: 0.02em; }
 .hx-microrow i { width: 4px; height: 4px; border-radius: 50%; background: var(--acc); opacity: 0.7; }
 
-/* THE GAP — triptych */
-.hx-tri { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 46px; }
-.hx-tri-card { border: 1px solid var(--line); border-radius: 20px; padding: 26px 24px 28px;
+/* POSITIONING — does / doesn't */
+.hx-dd { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 46px; }
+.hx-dd-col { border: 1px solid var(--line); border-radius: 22px; padding: 28px 28px 30px;
   background: rgba(255, 255, 255, 0.018); }
-.hx-tri-card p { color: var(--fg-55); font-size: 14.5px; line-height: 1.55; margin-top: 12px; }
-.hx-tri-card em { color: var(--fg-70); font-style: normal; font-weight: 600; }
-.hx-tri-k { font: 700 16px var(--sans); }
-.hx-tri-hi { border-color: var(--acc-line); background: var(--acc-soft);
-  box-shadow: 0 20px 60px -30px var(--acc-glow); }
-.hx-tri-hi .hx-tri-k { color: var(--acc); }
+.hx-dd-do { border-color: var(--acc-line); background: var(--acc-soft); box-shadow: 0 24px 70px -34px var(--acc-glow); }
+.hx-dd-head { display: flex; align-items: center; gap: 12px; font: 700 17px var(--sans); margin-bottom: 22px; }
+.hx-dd-badge { font: 600 10.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; }
+.hx-dd-badge.do { color: var(--on); background: var(--acc); }
+.hx-dd-badge.dont { color: var(--fg-70); background: rgba(255, 255, 255, 0.07); }
+.hx-dd-col ul { list-style: none; display: flex; flex-direction: column; gap: 15px; }
+.hx-dd-col li { display: flex; gap: 12px; align-items: flex-start; color: var(--fg-70); font-size: 14.6px; line-height: 1.5; }
+.hx-dd-i { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+  color: var(--acc); background: var(--acc-soft2); margin-top: 1px; }
+.hx-dd-i.dont { color: var(--fg-45); background: rgba(255, 255, 255, 0.05); }
+
+/* framed section panels ("everything in boxes") */
+.hx-panel { border: 1px solid var(--line); border-radius: 28px; background: rgba(255, 255, 255, 0.016);
+  padding: clamp(28px, 3.6vw, 50px); }
+.hx-panel-band { background: rgba(255, 255, 255, 0.022); border-color: rgba(255, 255, 255, 0.07); }
+.hx-panel .hx-steps, .hx-panel .hx-proofs, .hx-panel .hx-live { margin-top: 34px; }
+.hx-panel .hx-tag { margin-bottom: 4px; }
 
 /* HOW — steps */
 .hx-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 46px; }
@@ -388,7 +399,7 @@ html[data-page="home"] #view { display: block !important; }
 .hx-foot-mit { font: 500 12px var(--mono); color: var(--fg-38); }
 
 @media (max-width: 900px) {
-  .hx-tri, .hx-steps, .hx-proofs, .hx-live { grid-template-columns: 1fr; }
+  .hx-dd, .hx-steps, .hx-proofs, .hx-live { grid-template-columns: 1fr; }
   .hx-microrow { gap: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
