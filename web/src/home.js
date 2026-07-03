@@ -77,7 +77,7 @@ export function viewHome() {
   </section>
 
   <!-- HOW IT WORKS -->
-  <section class="hx-sec" id="how"><div class="hx-panel">
+  <section class="hx-sec" id="how">
     <span class="hx-tag" data-reveal>How it works</span>
     <h2 class="hx-h2" data-reveal>Four moves. Zero links.</h2>
     <div class="hx-steps">
@@ -92,11 +92,11 @@ export function viewHome() {
           <h3>${t}</h3><p>${d}</p>
         </div>`).join("")}
     </div>
-  </div></section>
+  </section>
 
   <!-- WHAT THE ZK PROVES (textured band) -->
   <section class="hx-band" id="proof-band">
-    <div class="hx-band-inner"><div class="hx-panel hx-panel-band">
+    <div class="hx-band-inner">
       <span class="hx-tag" data-reveal>Load-bearing ZK</span>
       <h2 class="hx-h2" data-reveal>One proof.<br>Four guarantees.</h2>
       <p class="hx-lead" data-reveal>A withdrawal is impossible without a valid Groth16 proof — verified on-chain by Stellar's native BN254 <code>pairing_check</code>. In one proof, revealing nothing about which deposit is yours:</p>
@@ -117,11 +117,11 @@ precommitment = <span class="f">Poseidon</span>(nullifier, secret)
 label         = <span class="f">Poseidon</span>(scope, nonce)
 commitment    = <span class="f">Poseidon</span>(amount, label, precommitment)  <span class="c">// leaf</span>
 nullifierHash = <span class="f">Poseidon</span>(nullifier)                     <span class="c">// public</span></code></pre>
-    </div></div>
+    </div>
   </section>
 
   <!-- LIVE -->
-  <section class="hx-sec" id="live"><div class="hx-panel">
+  <section class="hx-sec" id="live">
     <span class="hx-tag" data-reveal>Live on testnet</span>
     <h2 class="hx-h2" data-reveal>Verified on-chain. Right now.</h2>
     <div class="hx-live">
@@ -140,7 +140,7 @@ nullifierHash = <span class="f">Poseidon</span>(nullifier)                     <
         </a>
       </div>
     </div>
-  </div></section>
+  </section>
 
   <!-- CTA -->
   <section class="hx-cta">
