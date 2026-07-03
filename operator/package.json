@@ -1,0 +1,13 @@
+{
+  "name": "sanctum-operator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sanctum Pool ASP operator / root sequencer (holds admin key off the browser).",
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "node operator.mjs" },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^16.0.1",
+    "circomlibjs": "^0.1.7"
+  }
+}
