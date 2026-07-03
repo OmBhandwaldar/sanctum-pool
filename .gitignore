@@ -47,3 +47,13 @@ web/dist/
 web/public/circuits/*.wasm
 web/public/circuits/*.zkey
 web/public/circuits/*.json
+
+# local Claude/session + tooling artifacts
+.claude/
+skills-lock.json
+
+# reference/research notes (kept locally, not tracked)
+/STELLAR_HACKATHON_INFO.txt
+/STELLAR_IDEAS.txt
+/STELLAR_IDEAS_RESEARCH.txt
+/STELLAR_RESOURCES.txt
