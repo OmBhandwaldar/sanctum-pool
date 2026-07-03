@@ -1,0 +1,16 @@
+# Render Blueprint — deploys the Sanctum ASP operator as a free, persistent
+# Node web service. In the Render dashboard: New → Blueprint → pick this repo.
+# It will prompt for SANCTUM_SECRET (the pool admin's Stellar secret key).
+services:
+  - type: web
+    name: sanctum-operator
+    runtime: node
+    plan: free
+    rootDir: operator
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      # Admin secret that signs update_root / update_asp_root. NOT stored in the
+      # repo — Render prompts you to paste it (output of `stellar keys show sanctum`).
+      - key: SANCTUM_SECRET
+        sync: false
