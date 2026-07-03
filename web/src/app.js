@@ -13,13 +13,15 @@ import { verifyDisclosure } from "../../client/src/auditor.js";
 import { recipientField } from "../../client/src/address.js";
 import { toDec } from "../../client/src/field.js";
 import { MerkleTree } from "../../client/src/merkle.js";
+import { viewHome, initHome } from "./home.js";
 
 // ASP operator endpoint. Override with VITE_OPERATOR at build time; defaults to
 // the hosted operator in a production build and to the local one in dev.
 const OPERATOR =
   import.meta.env.VITE_OPERATOR ||
   (import.meta.env.PROD ? "https://sanctum-pool.onrender.com" : "http://localhost:8787");
-const state = { address: null, view: "deposit", selected: null };
+const state = { address: null, view: "home", selected: null };
+let homeTeardown = null;
 const $ = (id) => document.getElementById(id);
 const short = (a) => (a ? a.slice(0, 5) + "…" + a.slice(-5) : "");
 
@@ -47,6 +49,11 @@ function toast(msg, kind = "ok", hash) {
 // ---------- wallet ----------
 function renderWallet() {
   const slot = $("wallet-slot");
+  if (state.view === "home") {
+    slot.innerHTML = `<button class="hx-nav-launch" id="wbtn">Launch app</button>`;
+    $("wbtn").onclick = launchApp;
+    return;
+  }
   const label = state.address ? short(state.address) : "Connect wallet";
   slot.innerHTML = `<button class="wallet" id="wbtn"><span class="orb"></span><span>${label}</span></button>`;
   $("wbtn").onclick = state.address
@@ -70,15 +77,37 @@ function requireWallet() {
 
 // ---------- nav ----------
 const TABS = [["deposit", "Deposit"], ["withdraw", "Withdraw"], ["pool", "Pool"], ["auditor", "Auditor"]];
+const HOME_NAV = [["#how", "How it works"], ["#proof-band", "The proof"], ["#live", "Live"]];
 function renderNav() {
-  $("nav").innerHTML = TABS.map(([k, l]) => `<button data-v="${k}" aria-current="${state.view === k}">${l}</button>`).join("");
-  $("nav").querySelectorAll("button").forEach((b) => (b.onclick = () => { state.view = b.dataset.v; render(); }));
+  const nav = $("nav");
+  if (state.view === "home") {
+    nav.innerHTML = HOME_NAV.map(([h, l]) => `<a href="${h}">${l}</a>`).join("");
+    nav.querySelectorAll("a").forEach((a) => (a.onclick = (e) => {
+      e.preventDefault();
+      const el = document.querySelector(a.getAttribute("href"));
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
+    return;
+  }
+  nav.innerHTML = TABS.map(([k, l]) => `<button data-v="${k}" aria-current="${state.view === k}">${l}</button>`).join("");
+  nav.querySelectorAll("button").forEach((b) => (b.onclick = () => { state.view = b.dataset.v; render(); }));
 }
+function launchApp() { state.view = "deposit"; render(); }
+function goHome() { state.view = "home"; render(); }
 
 // ---------- render ----------
 function render() {
+  const isHome = state.view === "home";
+  document.documentElement.dataset.page = isHome ? "home" : "app";
+  if (homeTeardown && !isHome) { homeTeardown(); homeTeardown = null; }
   renderNav();
+  renderWallet();
   const v = $("view");
+  if (isHome) {
+    v.innerHTML = viewHome();
+    homeTeardown = initHome({ onLaunch: launchApp });
+    return;
+  }
   if (state.view === "deposit") { v.innerHTML = viewDeposit(); $("dep-btn").onclick = doDeposit; }
   else if (state.view === "withdraw") { v.innerHTML = viewWithdraw(); wireWithdraw(); }
   else if (state.view === "pool") { v.innerHTML = viewPool(); loadPool(); }
@@ -361,5 +390,6 @@ function wireGlow() {
 })();
 
 // ---------- boot ----------
-renderWallet();
+const brand = document.querySelector(".brand");
+if (brand) { brand.style.cursor = "pointer"; brand.onclick = goHome; }
 render();
