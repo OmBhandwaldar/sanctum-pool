@@ -8,6 +8,21 @@ Pure mixers (Tornado Cash) get sanctioned because a criminal's tainted funds are
 
 ---
 
+## What it is, in 30 seconds
+
+On a public chain, every payment is visible forever. That's a dealbreaker for real money movement: companies paying salaries or suppliers, treasuries moving funds, anyone who doesn't want their finances public. Plain mixers fix privacy but get banned (no way to keep criminals out). Sanctum Pool is the missing option: **private, compliant, and auditable.**
+
+**Example.** *Northwind Robotics* pays a contractor, *Priya*:
+
+1. **Deposit.** Northwind deposits into the pool. On-chain everyone sees "Northwind deposited," but only a **commitment** (a sealed lockbox) is posted — the amount and future recipient stay hidden. Northwind keeps a secret **note** (the only key).
+2. **Approve.** The ASP (compliance authority) screens the deposit and adds it to the **approved set**. A deposit that isn't approved can never be privately withdrawn.
+3. **Withdraw.** Funds leave the pool to *Priya's* fresh address. On-chain there's a deposit and a withdrawal, but **no one can link the two** — among all deposits, Priya's payment could have come from any of them. That unlinkability is the privacy.
+4. **Audit on demand.** Later, a regulator asks Northwind to justify that payment. Northwind hands over **one disclosure key** for that single transaction; the auditor decrypts and verifies it against the chain, learning nothing about any other payment or user.
+
+**Why it's useful:** privacy like a mixer, but bad actors are excluded and innocence is provable (regulator-acceptable), while keeping on-chain settlement and self-custody. And the zero-knowledge proof is generated **in your browser** (your secret never leaves your device) and verified with Stellar's new native BN254/Poseidon crypto.
+
+---
+
 ## What the ZK actually does (load-bearing)
 
 A withdrawal is **impossible** without a valid Groth16 zero-knowledge proof, verified **on-chain** in a Soroban contract using Stellar's native **BN254 `pairing_check`** host function. In one proof, revealing *nothing* about which deposit is yours, the withdrawer proves:
