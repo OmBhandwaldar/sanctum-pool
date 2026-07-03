@@ -14,7 +14,11 @@ import { recipientField } from "../../client/src/address.js";
 import { toDec } from "../../client/src/field.js";
 import { MerkleTree } from "../../client/src/merkle.js";
 
-const OPERATOR = "http://localhost:8787";
+// ASP operator endpoint. Override with VITE_OPERATOR at build time; defaults to
+// the hosted operator in a production build and to the local one in dev.
+const OPERATOR =
+  import.meta.env.VITE_OPERATOR ||
+  (import.meta.env.PROD ? "https://sanctum-pool.onrender.com" : "http://localhost:8787");
 const state = { address: null, view: "deposit", selected: null };
 const $ = (id) => document.getElementById(id);
 const short = (a) => (a ? a.slice(0, 5) + "…" + a.slice(-5) : "");
